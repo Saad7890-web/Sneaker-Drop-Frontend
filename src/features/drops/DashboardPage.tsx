@@ -8,16 +8,27 @@ import {
 import { ApiError } from "@/lib/api/errors";
 import { dropKeys, queryClient } from "@/lib/queryClient";
 import { useReservationStore } from "@/store/reservationStore";
-import type { PaginatedDropResponse } from "@/types/api";
+import type {
+  DropCard as DropCardType,
+  PaginatedDropResponse,
+} from "@/types/api";
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DropCard } from "./DropCard";
 import { DropCardSkeleton } from "./DropCardSkeleton";
+import { DropToolbar, type DropSortOption } from "./DropToolbar";
 
 export function DashboardPage() {
   const { getReservation, upsertReservation, clearReservation } =
     useReservationStore();
+
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "ACTIVE" | "SCHEDULED" | "ENDED"
+  >("all");
+  const [sortBy, setSortBy] = useState<DropSortOption>("newest");
 
   const dropsQuery = useInfiniteQuery({
     queryKey: dropKeys.active,
@@ -67,6 +78,38 @@ export function DashboardPage() {
 
   const allDrops = dropsQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
+  const filteredDrops = useMemo(() => {
+    const q = search.trim().toLowerCase();
+
+    const filtered = allDrops.filter((drop) => {
+      const matchesSearch =
+        q.length === 0 || drop.title.toLowerCase().includes(q);
+      const matchesStatus =
+        statusFilter === "all" || drop.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+
+    const sorted = [...filtered].sort((a: DropCardType, b: DropCardType) => {
+      if (sortBy === "newest") {
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      }
+
+      if (sortBy === "stock_desc") {
+        return b.availableStock - a.availableStock;
+      }
+
+      if (sortBy === "stock_asc") {
+        return a.availableStock - b.availableStock;
+      }
+
+      return 0;
+    });
+
+    return sorted;
+  }, [allDrops, search, statusFilter, sortBy]);
+
   return (
     <div className="space-y-6">
       <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -92,6 +135,15 @@ export function DashboardPage() {
         </Button>
       </section>
 
+      <DropToolbar
+        search={search}
+        onSearchChange={setSearch}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
+
       {dropsQuery.isLoading ? (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
@@ -109,7 +161,7 @@ export function DashboardPage() {
 
       {!dropsQuery.isLoading ? (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {allDrops.map((drop) => {
+          {filteredDrops.map((drop) => {
             const reservation = getReservation(drop.id);
 
             return (
@@ -129,6 +181,12 @@ export function DashboardPage() {
         </div>
       ) : null}
 
+      {!dropsQuery.isLoading && filteredDrops.length === 0 ? (
+        <Card className="p-8">
+          <p className="text-slate-300">No drops match your current filters.</p>
+        </Card>
+      ) : null}
+
       {dropsQuery.hasNextPage ? (
         <div className="flex justify-center pt-2">
           <Button
@@ -139,12 +197,6 @@ export function DashboardPage() {
             Load more
           </Button>
         </div>
-      ) : null}
-
-      {!dropsQuery.isLoading && allDrops.length === 0 ? (
-        <Card className="p-8">
-          <p className="text-slate-300">No active drops right now.</p>
-        </Card>
       ) : null}
     </div>
   );

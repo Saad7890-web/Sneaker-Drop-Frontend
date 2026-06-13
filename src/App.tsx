@@ -1,5 +1,6 @@
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { NotFoundPage } from "@/components/common/NotFoundPage";
+import { NotificationTray } from "@/components/common/NotificationTray";
 import { AdminRoute } from "@/components/layout/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
@@ -59,6 +60,7 @@ export default function App() {
       </Routes>
 
       <Toaster richColors position="top-right" />
+      <NotificationTray />
     </ErrorBoundary>
   );
 }

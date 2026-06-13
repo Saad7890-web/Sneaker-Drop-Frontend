@@ -1,6 +1,8 @@
 import { env } from "@/lib/env";
 import { dropKeys, queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/authStore";
+import { useNotificationStore } from "@/store/notificationStore";
+import { useReservationStore } from "@/store/reservationStore";
 import type {
   DropCard,
   PaginatedDropResponse,
@@ -45,6 +47,7 @@ function patchDropStockInDetail(
   payload: StockUpdatedPayload,
 ): DropCard | undefined {
   if (!old || old.id !== payload.dropId) return old;
+
   return {
     ...old,
     availableStock: payload.availableStock,
@@ -82,16 +85,48 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    const onReservationCreated = (_payload: ReservationCreatedPayload) => {
+    const onReservationCreated = (payload: ReservationCreatedPayload) => {
       queryClient.invalidateQueries({ queryKey: dropKeys.active });
+
+      useNotificationStore.getState().push({
+        title: "Reservation created",
+        message: `Stock held for drop ${payload.dropId} until ${new Date(payload.expiresAt).toLocaleTimeString()}.`,
+        tone: "success",
+      });
     };
 
-    const onReservationExpired = (_payload: ReservationExpiredPayload) => {
+    const onReservationExpired = (payload: ReservationExpiredPayload) => {
       queryClient.invalidateQueries({ queryKey: dropKeys.active });
+
+      const reservationStore = useReservationStore.getState();
+      const existing = reservationStore.reservationsByDropId[payload.dropId];
+
+      if (existing?.reservationId === payload.reservationId) {
+        reservationStore.clearReservation(payload.dropId);
+      }
+
+      useNotificationStore.getState().push({
+        title: "Reservation expired",
+        message: `Drop ${payload.dropId} returned to available stock.`,
+        tone: "warning",
+      });
     };
 
-    const onPurchaseCompleted = (_payload: PurchaseCompletedPayload) => {
+    const onPurchaseCompleted = (payload: PurchaseCompletedPayload) => {
       queryClient.invalidateQueries({ queryKey: dropKeys.active });
+
+      const reservationStore = useReservationStore.getState();
+      const existing = reservationStore.reservationsByDropId[payload.dropId];
+
+      if (existing?.reservationId === payload.reservationId) {
+        reservationStore.clearReservation(payload.dropId);
+      }
+
+      useNotificationStore.getState().push({
+        title: "Purchase completed",
+        message: `A purchase was completed for drop ${payload.dropId}.`,
+        tone: "info",
+      });
     };
 
     socket.on("stock_updated", onStockUpdated);
