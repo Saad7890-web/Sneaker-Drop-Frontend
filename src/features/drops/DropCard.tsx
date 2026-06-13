@@ -5,6 +5,7 @@ import type { StoredReservation } from "@/store/reservationStore";
 import type { DropCard as DropCardType } from "@/types/api";
 import { Clock3, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 type Props = {
   drop: DropCardType;
@@ -67,7 +68,12 @@ export function DropCard({
       <div className="border-b border-slate-800 p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-white">{drop.title}</h3>
+            <Link
+              to={`/drops/${drop.id}`}
+              className="text-lg font-semibold text-white hover:text-blue-300"
+            >
+              {drop.title}
+            </Link>
             <p className="mt-1 text-sm text-slate-400">
               Starts: {new Date(drop.startsAt).toLocaleString()}
             </p>
@@ -190,6 +196,12 @@ export function DropCard({
               ? "Unavailable"
               : "Reserve"}
         </Button>
+
+        <Link to={`/drops/${drop.id}`} className="mt-3 block">
+          <Button variant="secondary" className="w-full">
+            View Details
+          </Button>
+        </Link>
 
         <p
           className={`mt-3 text-sm ${stockTone === "danger" ? "text-rose-400" : stockTone === "warning" ? "text-amber-300" : "text-emerald-300"}`}

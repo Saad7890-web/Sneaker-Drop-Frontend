@@ -1,9 +1,11 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { PublicOnlyRoute } from "@/components/layout/PublicOnlyRoute";
+import { ReservationBanner } from "@/components/layout/ReservationBanner";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { RegisterPage } from "@/features/auth/RegisterPage";
 import { DashboardPage } from "@/features/drops/DashboardPage";
+import { DropDetailPage } from "@/features/drops/DropDetailPage";
 import { Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
 
@@ -21,7 +23,18 @@ export default function App() {
             path="/"
             element={
               <AppLayout>
+                <ReservationBanner />
                 <DashboardPage />
+              </AppLayout>
+            }
+          />
+
+          <Route
+            path="/drops/:dropId"
+            element={
+              <AppLayout>
+                <ReservationBanner />
+                <DropDetailPage />
               </AppLayout>
             }
           />
