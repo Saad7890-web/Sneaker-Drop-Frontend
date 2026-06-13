@@ -1,4 +1,5 @@
 import { normalizeApiError } from "@/lib/api/errors";
+import { extractResponseData, isFailurePayload } from "@/lib/api/response";
 import { env } from "@/lib/env";
 import { useAuthStore } from "@/store/authStore";
 
@@ -44,14 +45,9 @@ export async function apiRequest<T>(
     throw normalizeApiError(payload, response.status);
   }
 
-  if (
-    payload &&
-    typeof payload === "object" &&
-    "success" in payload &&
-    (payload as { success?: boolean }).success === false
-  ) {
+  if (isFailurePayload(payload)) {
     throw normalizeApiError(payload, response.status);
   }
 
-  return (payload as { data: T }).data;
+  return extractResponseData<T>(payload);
 }

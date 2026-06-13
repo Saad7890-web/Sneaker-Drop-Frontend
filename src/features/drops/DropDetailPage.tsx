@@ -7,6 +7,7 @@ import {
   reserveDrop,
 } from "@/lib/api/endpoints";
 import { ApiError } from "@/lib/api/errors";
+import { dropStatusLabel, isDropActive, isDropSoldOut } from "@/lib/dropStatus";
 import { dropKeys, queryClient } from "@/lib/queryClient";
 import { useReservationStore } from "@/store/reservationStore";
 import type { DropCard } from "@/types/api";
@@ -125,7 +126,7 @@ export function DropDetailPage() {
                 {drop.title}
               </h1>
               <Badge tone={drop.status === "ACTIVE" ? "success" : "neutral"}>
-                {drop.status}
+                {dropStatusLabel(drop.status)}
               </Badge>
             </div>
 
@@ -239,10 +240,15 @@ export function DropDetailPage() {
               <Button
                 className="w-full"
                 loading={reserveMutation.isPending}
-                disabled={drop.availableStock <= 0 || drop.status !== "ACTIVE"}
+                disabled={
+                  isDropSoldOut(drop.availableStock) ||
+                  !isDropActive(drop.status)
+                }
                 onClick={() => reserveMutation.mutate()}
               >
-                {drop.availableStock <= 0 ? "Sold out" : "Reserve now"}
+                {isDropSoldOut(drop.availableStock)
+                  ? "Sold out"
+                  : "Reserve now"}
               </Button>
             </div>
           )}

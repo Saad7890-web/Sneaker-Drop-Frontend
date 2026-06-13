@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { dropStatusLabel, isDropActive, isDropSoldOut } from "@/lib/dropStatus";
 import type { StoredReservation } from "@/store/reservationStore";
 import type { DropCard as DropCardType } from "@/types/api";
 import { Clock3, Users } from "lucide-react";
@@ -15,18 +16,6 @@ type Props = {
   reserving: boolean;
   purchasing: boolean;
 };
-
-function formatCountdown(targetIso?: string) {
-  if (!targetIso) return null;
-  const target = new Date(targetIso).getTime();
-  const now = Date.now();
-  const diff = Math.max(0, target - now);
-
-  const seconds = Math.floor(diff / 1000) % 60;
-  const minutes = Math.floor(diff / 1000 / 60);
-
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
 
 export function DropCard({
   drop,
@@ -49,7 +38,10 @@ export function DropCard({
     if (diff <= 0) return "00:00";
     const minutes = Math.floor(diff / 1000 / 60);
     const seconds = Math.floor(diff / 1000) % 60;
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+      2,
+      "0",
+    )}`;
   }, [reservation?.expiresAt, now]);
 
   const expired = reservation
@@ -78,6 +70,7 @@ export function DropCard({
               Starts: {new Date(drop.startsAt).toLocaleString()}
             </p>
           </div>
+
           <Badge
             tone={
               drop.status === "ACTIVE"
@@ -87,7 +80,7 @@ export function DropCard({
                   : "neutral"
             }
           >
-            {drop.status}
+            {dropStatusLabel(drop.status)}
           </Badge>
         </div>
 
@@ -187,12 +180,14 @@ export function DropCard({
           className="w-full"
           variant="secondary"
           loading={reserving}
-          disabled={drop.availableStock <= 0 || drop.status !== "ACTIVE"}
+          disabled={
+            isDropSoldOut(drop.availableStock) || !isDropActive(drop.status)
+          }
           onClick={() => onReserve(drop.id)}
         >
-          {drop.availableStock <= 0
+          {isDropSoldOut(drop.availableStock)
             ? "Sold out"
-            : drop.status !== "ACTIVE"
+            : !isDropActive(drop.status)
               ? "Unavailable"
               : "Reserve"}
         </Button>
@@ -204,7 +199,13 @@ export function DropCard({
         </Link>
 
         <p
-          className={`mt-3 text-sm ${stockTone === "danger" ? "text-rose-400" : stockTone === "warning" ? "text-amber-300" : "text-emerald-300"}`}
+          className={`mt-3 text-sm ${
+            stockTone === "danger"
+              ? "text-rose-400"
+              : stockTone === "warning"
+                ? "text-amber-300"
+                : "text-emerald-300"
+          }`}
         >
           Stock is {drop.availableStock} of {drop.totalStock}
         </p>
