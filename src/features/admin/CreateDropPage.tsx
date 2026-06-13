@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Dialog } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
 import { createDrop } from "@/lib/api/endpoints";
 import { ApiError } from "@/lib/api/errors";
@@ -9,10 +10,19 @@ import {
   type CreateDropFormValues,
 } from "@/lib/validators/drop";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 export function CreateDropPage() {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<{
+    title: string;
+    totalStock: number;
+    startsAt: string;
+    endsAt: string | null;
+  } | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -29,20 +39,11 @@ export function CreateDropPage() {
     },
   });
 
-  const onSubmit = async (values: CreateDropFormValues) => {
+  const submitNow = async () => {
+    if (!pendingPayload) return;
+
     try {
-      const startsAtIso = new Date(values.startsAt).toISOString();
-      const endsAtIso = values.endsAt
-        ? new Date(values.endsAt).toISOString()
-        : null;
-
-      await createDrop({
-        title: values.title,
-        totalStock: Number(values.totalStock),
-        startsAt: startsAtIso,
-        endsAt: endsAtIso,
-      });
-
+      await createDrop(pendingPayload);
       await queryClient.invalidateQueries({ queryKey: ["drops", "active"] });
       toast.success("Drop created successfully");
       reset({
@@ -58,7 +59,26 @@ export function CreateDropPage() {
       } else {
         toast.error(err.message || "Failed to create drop");
       }
+    } finally {
+      setConfirmOpen(false);
+      setPendingPayload(null);
     }
+  };
+
+  const onSubmit = async (values: CreateDropFormValues) => {
+    const startsAtIso = new Date(values.startsAt).toISOString();
+    const endsAtIso = values.endsAt
+      ? new Date(values.endsAt).toISOString()
+      : null;
+
+    setPendingPayload({
+      title: values.title,
+      totalStock: Number(values.totalStock),
+      startsAt: startsAtIso,
+      endsAt: endsAtIso,
+    });
+
+    setConfirmOpen(true);
   };
 
   return (
@@ -102,10 +122,47 @@ export function CreateDropPage() {
           />
 
           <Button className="w-full" loading={isSubmitting}>
-            Create drop
+            Review drop
           </Button>
         </form>
       </Card>
+
+      <Dialog
+        open={confirmOpen}
+        title="Create this drop?"
+        description="Double-check the title, stock, and schedule before publishing."
+        confirmLabel="Create drop"
+        confirmTone="primary"
+        loading={isSubmitting}
+        onClose={() => {
+          setConfirmOpen(false);
+          setPendingPayload(null);
+        }}
+        onConfirm={submitNow}
+      >
+        {pendingPayload ? (
+          <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-sm">
+            <p className="text-slate-200">
+              <span className="text-slate-400">Title:</span>{" "}
+              {pendingPayload.title}
+            </p>
+            <p className="text-slate-200">
+              <span className="text-slate-400">Stock:</span>{" "}
+              {pendingPayload.totalStock}
+            </p>
+            <p className="text-slate-200">
+              <span className="text-slate-400">Starts at:</span>{" "}
+              {new Date(pendingPayload.startsAt).toLocaleString()}
+            </p>
+            <p className="text-slate-200">
+              <span className="text-slate-400">Ends at:</span>{" "}
+              {pendingPayload.endsAt
+                ? new Date(pendingPayload.endsAt).toLocaleString()
+                : "No end time"}
+            </p>
+          </div>
+        ) : null}
+      </Dialog>
     </div>
   );
 }
