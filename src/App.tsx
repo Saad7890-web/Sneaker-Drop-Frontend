@@ -1,9 +1,11 @@
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { NotFoundPage } from "@/components/common/NotFoundPage";
+import { AdminRoute } from "@/components/layout/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { PublicOnlyRoute } from "@/components/layout/PublicOnlyRoute";
 import { ReservationBanner } from "@/components/layout/ReservationBanner";
+import { CreateDropPage } from "@/features/admin/CreateDropPage";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { RegisterPage } from "@/features/auth/RegisterPage";
 import { DashboardPage } from "@/features/drops/DashboardPage";
@@ -40,6 +42,17 @@ export default function App() {
               </AppLayout>
             }
           />
+
+          <Route element={<AdminRoute />}>
+            <Route
+              path="/admin/drops/new"
+              element={
+                <AppLayout>
+                  <CreateDropPage />
+                </AppLayout>
+              }
+            />
+          </Route>
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

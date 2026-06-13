@@ -4,7 +4,7 @@ import { env } from "@/lib/env";
 import { useAuthStore } from "@/store/authStore";
 import { useReservationStore } from "@/store/reservationStore";
 import { LogOut, ShieldCheck, UserRound } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -48,6 +48,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <LogOut className="h-4 w-4" />
                 Logout
               </Button>
+            ) : null}
+
+            {user?.role === "ADMIN" ? (
+              <Link to="/admin/drops/new" className="hidden sm:block">
+                <Button variant="secondary">Create Drop</Button>
+              </Link>
             ) : null}
           </div>
         </div>
