@@ -25,3 +25,4 @@ export const createDropSchema = z.object({
 });
 
 export type CreateDropFormValues = z.infer<typeof createDropSchema>;
+export type CreateDropFormInput = z.input<typeof createDropSchema>;

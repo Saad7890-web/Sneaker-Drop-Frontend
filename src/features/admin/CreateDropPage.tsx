@@ -7,11 +7,12 @@ import { ApiError } from "@/lib/api/errors";
 import { queryClient } from "@/lib/queryClient";
 import {
   createDropSchema,
+  type CreateDropFormInput,
   type CreateDropFormValues,
 } from "@/lib/validators/drop";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "sonner";
 
 export function CreateDropPage() {
@@ -29,7 +30,7 @@ export function CreateDropPage() {
     reset,
     formState: { errors, isSubmitting },
     setError,
-  } = useForm<CreateDropFormValues>({
+  } = useForm<CreateDropFormInput, any, CreateDropFormValues>({
     resolver: zodResolver(createDropSchema),
     defaultValues: {
       title: "",
@@ -65,17 +66,12 @@ export function CreateDropPage() {
     }
   };
 
-  const onSubmit = async (values: CreateDropFormValues) => {
-    const startsAtIso = new Date(values.startsAt).toISOString();
-    const endsAtIso = values.endsAt
-      ? new Date(values.endsAt).toISOString()
-      : null;
-
+  const onSubmit: SubmitHandler<CreateDropFormValues> = async (values) => {
     setPendingPayload({
       title: values.title,
-      totalStock: Number(values.totalStock),
-      startsAt: startsAtIso,
-      endsAt: endsAtIso,
+      totalStock: values.totalStock,
+      startsAt: new Date(values.startsAt).toISOString(),
+      endsAt: values.endsAt ? new Date(values.endsAt).toISOString() : null,
     });
 
     setConfirmOpen(true);

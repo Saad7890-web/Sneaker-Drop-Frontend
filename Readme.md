@@ -101,9 +101,7 @@ Preview the production build locally:
 npm run preview
 ```
 
-## Backend Contract Assumptions
-
-This frontend expects the backend to expose endpoints similar to:
+## Backend Contract
 
 | Method | Endpoint                                       | Description               |
 | ------ | ---------------------------------------------- | ------------------------- |
@@ -163,37 +161,6 @@ The layout is responsive and supports:
 - Wrapping header controls
 - Compact reservation banner actions
 - Modal dialogs on small screens
-
-## Deployment
-
-Recommended deployment setup:
-
-- **Frontend:** Vercel
-- **Backend:** Vercel / Render / Railway / Fly.io
-- **Database:** Neon / PostgreSQL provider
-
-Set these environment variables in your hosting dashboard:
-
-```env
-VITE_API_BASE_URL=your_backend_api_url
-VITE_SOCKET_URL=your_backend_socket_url
-```
-
-## Build Checklist
-
-Before submission, verify:
-
-- [ ] Login works
-- [ ] Register works
-- [ ] Active drops load
-- [ ] Reserve works
-- [ ] Purchase works
-- [ ] Countdown appears
-- [ ] Stock updates in realtime
-- [ ] Expired reservation clears correctly
-- [ ] Admin create-drop form works
-- [ ] Loading states appear
-- [ ] Errors show readable messages
 
 ## Project Philosophy
 
