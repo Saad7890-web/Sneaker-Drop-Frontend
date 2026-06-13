@@ -56,3 +56,31 @@ export async function purchaseReservation(reservationId: string) {
     },
   );
 }
+
+export type CreateDropInput = {
+  title: string;
+  totalStock: number;
+  startsAt: string;
+  endsAt?: string | null;
+};
+
+export type CreateDropResponse = {
+  drop: {
+    id: string;
+    title: string;
+    totalStock: number;
+    availableStock: number;
+    status: string;
+    startsAt: string;
+    endsAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+};
+
+export async function createDrop(input: CreateDropInput) {
+  return apiRequest<CreateDropResponse>("/drops", {
+    method: "POST",
+    body: input,
+  });
+}

@@ -1,3 +1,5 @@
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { NotFoundPage } from "@/components/common/NotFoundPage";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { PublicOnlyRoute } from "@/components/layout/PublicOnlyRoute";
@@ -11,7 +13,7 @@ import { Toaster } from "sonner";
 
 export default function App() {
   return (
-    <>
+    <ErrorBoundary>
       <Routes>
         <Route element={<PublicOnlyRoute />}>
           <Route path="/login" element={<LoginPage />} />
@@ -39,9 +41,11 @@ export default function App() {
             }
           />
         </Route>
+
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
 
       <Toaster richColors position="top-right" />
-    </>
+    </ErrorBoundary>
   );
 }

@@ -13,6 +13,7 @@ import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { DropCard } from "./DropCard";
+import { DropCardSkeleton } from "./DropCardSkeleton";
 
 export function DashboardPage() {
   const { getReservation, upsertReservation, clearReservation } =
@@ -35,12 +36,7 @@ export function DashboardPage() {
         expiresAt: result.reservation.expiresAt,
       });
 
-      queryClient.setQueryData<PaginatedDropResponse[]>(
-        dropKeys.active,
-        (old) => old ?? old,
-      );
       queryClient.invalidateQueries({ queryKey: dropKeys.active });
-
       toast.success("Reservation created");
     },
     onError: (error) => {
@@ -97,12 +93,11 @@ export function DashboardPage() {
       </section>
 
       {dropsQuery.isLoading ? (
-        <Card className="p-8">
-          <div className="flex items-center gap-3 text-slate-300">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            Loading active drops...
-          </div>
-        </Card>
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <DropCardSkeleton key={index} />
+          ))}
+        </div>
       ) : dropsQuery.isError ? (
         <Card className="p-8">
           <div className="flex items-center gap-3 text-rose-300">
@@ -112,25 +107,27 @@ export function DashboardPage() {
         </Card>
       ) : null}
 
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {allDrops.map((drop) => {
-          const reservation = getReservation(drop.id);
+      {!dropsQuery.isLoading ? (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {allDrops.map((drop) => {
+            const reservation = getReservation(drop.id);
 
-          return (
-            <DropCard
-              key={drop.id}
-              drop={drop}
-              reservation={reservation}
-              reserving={reserveMutation.isPending}
-              purchasing={purchaseMutation.isPending}
-              onReserve={(dropId) => reserveMutation.mutate(dropId)}
-              onPurchase={(_reservationId, _dropId) =>
-                purchaseMutation.mutate(_reservationId)
-              }
-            />
-          );
-        })}
-      </div>
+            return (
+              <DropCard
+                key={drop.id}
+                drop={drop}
+                reservation={reservation}
+                reserving={reserveMutation.isPending}
+                purchasing={purchaseMutation.isPending}
+                onReserve={(dropId) => reserveMutation.mutate(dropId)}
+                onPurchase={(_reservationId, _dropId) =>
+                  purchaseMutation.mutate(_reservationId)
+                }
+              />
+            );
+          })}
+        </div>
+      ) : null}
 
       {dropsQuery.hasNextPage ? (
         <div className="flex justify-center pt-2">
